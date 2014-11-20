@@ -29,6 +29,42 @@ class Servlet() extends ScalatraServlet with Serializable{
     compact(JArray(datasets.keys.toList.map(JString(_))))
   }
 
+  get("/filter_test/"){
+    /*
+    g_screen = [True] * self.df.shape[0]
+    for col,filts in self.filters:
+      screen = [False] * self.df.shape[0]
+    if len(filts) == 0:
+      continue
+    eq_set = set()
+    for filt in filts:
+    if type(filt) == list:
+      screen = [s or (filt[0] <= x and x <= filt[1]) for s,x in zip(screen, self.df[col])]
+    else:
+    eq_set.add(filt)
+    if len(eq_set) > 0:
+      screen = [s or (x in eq_set) for s,x in zip(screen, self.df[col])]
+    g_screen = [g and s for g,s in zip(g_screen,screen)]
+    return g_screen
+    */
+
+    val out = new mutable.StringBuilder()
+    val input = parse("""{"date":[0.0, 1.0]}""")
+    for( (k,v) <- input.values.asInstanceOf[Map[String, List[Any]]]){
+      out.append(k)
+      out.append(" -- ")
+
+      v collect {
+        case x:String => out.append(s"'$x', ")
+        case x:Double => out.append(s"'${x.toString}', ")
+        case (x:Double)::(y:Double)::_ => out.append(s"'${x.toString} - ${y.toString}', ")
+        case x => out.append(x.toString)
+      }
+      out.append("\n")
+    }
+    out.toString()
+  }
+
   get("/data/"){
     contentType="text/html"
     val rows = responses.mapValues(_.value).mapValues {
@@ -47,7 +83,10 @@ class Servlet() extends ScalatraServlet with Serializable{
     responses.get(id).map(_.value) match{
       case None => NotFound()
       case Some(None) => Accepted()
-      case Some(Some(Success(result))) => Ok(result)
+      case Some(Some(Success(result))) => {
+        contentType = "application/json; charset=utf-8"
+        Ok(result)
+      }
       case Some(Some(Failure(exception))) => InternalServerError(exception.getMessage + "\n" + exception.getStackTraceString)
     }
   }
@@ -66,7 +105,7 @@ class Servlet() extends ScalatraServlet with Serializable{
     try {
       val dataset = datasets(params("dataset"))
       try {
-        val filter: Map[String, Any] => Boolean = _ => true
+        val filter: Map[String, Any] => Boolean = new DcDashboardFilter(params("filter"))
 
         val toList: RDD[Map[String, Any]] => List[Map[String, Any]] = try {
           params("method") match {
@@ -93,7 +132,7 @@ class Servlet() extends ScalatraServlet with Serializable{
         responses += ((id, Future(futureFunction())))
         Ok(id)
       }catch{
-        case e:Exception => InternalServerError(e.getMessage)
+        case e:Exception => InternalServerError(reason = e.getMessage)
       }
     }catch{
       case e:Exception => NotFound()

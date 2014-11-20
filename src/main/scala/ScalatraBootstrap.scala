@@ -14,14 +14,18 @@ import org.json4s.jackson.JsonMethods._
 class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     // Mount servlets.
-    val config = new SparkConf(false).setMaster("local[2]").setAppName("ScalatraHost")
+    val config = new SparkConf(false).
+      setMaster("spark://ion-21-14.sdsc.edu:7077").
+      setAppName("ScalatraHost")
     val sc = new SparkContext(config)
 
     context.mount(new GreetingController, "/sample/*")
 
     val rddHost = new Servlet()
     context.mount(rddHost, "/rdd/*")
-    rddHost.register("tweets", sc.textFile("/Users/dlisuk/Documents/Projects/restful_rdd/src/main/resources/tweets.json").map(x => ProcJson(x)))
+    val rdd = sc.textFile("hdfs://ion-21-14.ibnet0:54310/user/dlisuk/t01").map(x => ProcJson(x)).cache()
+    rdd.take(1)
+    rddHost.register("tweets", rdd)
   }
 
 }
