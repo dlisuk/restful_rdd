@@ -2,10 +2,9 @@ package edu.ucsd.dlisuk.restful_rdd
 
 import scala.io.Source
 
-class DataProvider {
-  private val tweets = "["+Source.fromFile("/Users/dlisuk/Documents/Projects/restful_rdd/src/main/resources/tweets.json").getLines().mkString(",")+"]"
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
+import org.json4s.JsonDSL._
 
-  def get(params:Seq[String]):String = {
-    tweets
-  }
+class DataProvider {
 }
