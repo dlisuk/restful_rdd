@@ -26,56 +26,7 @@ class Servlet() extends ScalatraServlet with Serializable{
   }
 
   get("/"){
-    compact(JArray(datasets.keys.toList.map(JString(_))))
-  }
-
-  get("/filter_test/"){
-    /*
-    g_screen = [True] * self.df.shape[0]
-    for col,filts in self.filters:
-      screen = [False] * self.df.shape[0]
-    if len(filts) == 0:
-      continue
-    eq_set = set()
-    for filt in filts:
-    if type(filt) == list:
-      screen = [s or (filt[0] <= x and x <= filt[1]) for s,x in zip(screen, self.df[col])]
-    else:
-    eq_set.add(filt)
-    if len(eq_set) > 0:
-      screen = [s or (x in eq_set) for s,x in zip(screen, self.df[col])]
-    g_screen = [g and s for g,s in zip(g_screen,screen)]
-    return g_screen
-    */
-
-    val out = new mutable.StringBuilder()
-    val input = parse("""{"date":[0.0, 1.0]}""")
-    for( (k,v) <- input.values.asInstanceOf[Map[String, List[Any]]]){
-      out.append(k)
-      out.append(" -- ")
-
-      v collect {
-        case x:String => out.append(s"'$x', ")
-        case x:Double => out.append(s"'${x.toString}', ")
-        case (x:Double)::(y:Double)::_ => out.append(s"'${x.toString} - ${y.toString}', ")
-        case x => out.append(x.toString)
-      }
-      out.append("\n")
-    }
-    out.toString()
-  }
-
-  get("/data/"){
-    contentType="text/html"
-    val rows = responses.mapValues(_.value).mapValues {
-      case None => "Waiting"
-      case Some(Success(_)) => "Ready"
-      case Some(Failure(e)) => "Failed"
-    }.toList.sortBy(x=> (-x._1.toInt)).map{
-      case (id, result) => s"<tr> <td> <a href='./$id'>$id</a> </td> <td> $result </td> <tr>"
-    }
-
-    "<table border='1'><tr><th>Data ID</th><th>Status</th></tr>\n" + rows.mkString("\n") + "</table>"
+    datasets.keys.mkString("\n")
   }
 
   get("/data/:id"){
